@@ -48,11 +48,6 @@ news_etl/
    source venv/bin/activate  # On Windows use: venv\Scripts\activate
    ```
 
-3. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
 ---
 
 ### 2️⃣ Extract: Getting News Data from [NewsAPI](https://newsapi.org)
@@ -68,20 +63,6 @@ news_etl/
 - Retrieves news articles in **JSON format**
 - Returns the extracted data for further processing
 
-```python
-import requests
-
-API_KEY = "your_newsapi_key"
-
-def extract_news():
-    url = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={API_KEY}"
-    response = requests.get(url)
-    news_data = response.json()
-    return news_data
-```
-![image](https://github.com/user-attachments/assets/e2160e93-6d2b-4abc-b9c2-f04b85452037)
-
----
 
 ### 3️⃣ Transform: Converting JSON to Structured Format
 📌 **File:** `transform.py`  
@@ -96,18 +77,6 @@ def extract_news():
 - Converts JSON into a **structured Pandas DataFrame**
 - Returns the transformed data
 
-```python
-import pandas as pd
-
-def transform_news(news_data):
-    articles = news_data.get("articles", [])
-    df = pd.DataFrame(articles, columns=["source", "author", "title", "description", "url", "publishedAt"])
-    return df
-```
-![image](https://github.com/user-attachments/assets/72e0e4ba-3d88-43c1-9e4f-326fa3b31b83)
-
----
-
 ### 4️⃣ Load: Storing Data into [NeonDB](https://neon.tech)
 📌 **File:** `load.py`  
 📌 **Goal:** Store the **structured DataFrame** into a **PostgreSQL cloud database ([NeonDB](https://neon.tech))**.
@@ -119,38 +88,8 @@ def transform_news(news_data):
 📌 **How it Works?**
 - Establishes a connection to **[NeonDB](https://neon.tech)**  
 - **Creates a table** if it doesn’t exist  
-- **Inserts transformed news data** into the table  
-
-```python
-import psycopg2
-import pandas as pd
-
-DB_URI = "postgresql://your_username:your_password@your_neondb_url/dbname"
-
-def load_news_to_neon(transformed_data):
-    conn = psycopg2.connect(DB_URI)
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS news (
-            source TEXT,
-            author TEXT,
-            title TEXT,
-            description TEXT,
-            url TEXT,
-            published_at TIMESTAMP
-        )
-    """)
-    
-    for _, row in transformed_data.iterrows():
-        cursor.execute("""
-            INSERT INTO news (source, author, title, description, url, published_at) 
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, tuple(row))
-    
-    conn.commit()
-    conn.close()
-```
+- **Inserts transformed news data** into the table
+  
 ![image](https://github.com/user-attachments/assets/c55e7052-7639-4ab6-8447-e85b2b0222da)
 
 ![image](https://github.com/user-attachments/assets/a3c96894-8b4f-4cf9-87ec-3b8f9d6d91ce)
